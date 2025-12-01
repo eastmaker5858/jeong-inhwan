@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jeong In Hwan Photography Portfolio</title>
+    <meta
+      name="description"
+      content="Jeong In Hwan의 사진 포트폴리오. 다양한 작품을 한눈에 감상해 보세요."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <div>
+          <h1 class="site-title">Jeong In Hwan</h1>
+          <p class="site-subtitle">Photography Portfolio</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p>
+          순간의 분위기와 빛을 기록하는
+          <strong>Jeong In Hwan</strong>의 사진 포트폴리오입니다.
+        </p>
+      </section>
+
+      <section class="gallery" aria-label="사진 갤러리" id="gallery">
+        <!-- images.json을 통해 자동으로 사진이 렌더링됩니다. -->
+      </section>
+    </main>
+
+    <!-- 클릭 시 확대 보기용 라이트박스 -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <div class="lightbox-backdrop" data-lightbox-close></div>
+      <figure class="lightbox-content">
+        <img id="lightbox-image" alt="" />
+        <figcaption id="lightbox-caption"></figcaption>
+        <button
+          class="lightbox-close"
+          type="button"
+          aria-label="확대 이미지 닫기"
+          data-lightbox-close
+        >
+          ×
+        </button>
+      </figure>
+    </div>
+
+    <footer class="site-footer">
+      <p>© <span id="year"></span> Jeong In Hwan. All rights reserved.</p>
+    </footer>
+
+    <script>
+      // 현재 연도로 자동 업데이트
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // images.json을 불러와 갤러리를 채우는 스크립트
+      async function loadGallery() {
+        const galleryEl = document.getElementById("gallery");
+        if (!galleryEl) return;
+
+        try {
+          const res = await fetch("images.json", { cache: "no-store" });
+          if (!res.ok) {
+            console.error("images.json 로드 실패:", res.status);
+            return;
+          }
+          const data = await res.json();
+          const images = Array.isArray(data) ? data : data.images;
+          if (!Array.isArray(images)) {
+            console.error("images.json 형식이 올바르지 않습니다.");
+            return;
+          }
+
+          images.forEach((item) => {
+            if (!item || !item.src) return;
+            const figure = document.createElement("figure");
+            figure.className = "gallery-item";
+
+            const img = document.createElement("img");
+            img.src = item.src;
+            img.alt = item.alt || "";
+            img.loading = "lazy";
+
+            img.addEventListener("click", () => {
+              openLightbox(item.src, item.alt || "");
+            });
+
+            figure.appendChild(img);
+            galleryEl.appendChild(figure);
+          });
+        } catch (error) {
+          console.error("갤러리 로드 중 오류:", error);
+        }
+      }
+
+      function openLightbox(src, alt) {
+        const lightbox = document.getElementById("lightbox");
+        const img = document.getElementById("lightbox-image");
+        const caption = document.getElementById("lightbox-caption");
+        if (!lightbox || !img || !caption) return;
+
+        img.src = src;
+        img.alt = alt || "";
+        caption.textContent = alt || "";
+
+        lightbox.classList.add("is-open");
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeLightbox() {
+        const lightbox = document.getElementById("lightbox");
+        const img = document.getElementById("lightbox-image");
+        const caption = document.getElementById("lightbox-caption");
+        if (!lightbox || !img || !caption) return;
+
+        lightbox.classList.remove("is-open");
+        lightbox.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      // 라이트박스 이벤트 바인딩
+      (function setupLightboxEvents() {
+        const lightbox = document.getElementById("lightbox");
+        if (!lightbox) return;
+
+        lightbox.addEventListener("click", (event) => {
+          const target = event.target;
+          if (
+            target instanceof HTMLElement &&
+            target.hasAttribute("data-lightbox-close")
+          ) {
+            closeLightbox();
+          }
+        });
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeLightbox();
+          }
+        });
+      })();
+
+      loadGallery();
+    </script>
+  </body>
+</html>
